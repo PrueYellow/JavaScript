@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HomeWork</title>
+
+    <style>
+        :root {
+            --area-img-width: 500px;
+            --book-sn-width: 50px;
+            --book-author-width: 120px;
+        }
+
+        html {
+            height: 100%;
+        }
+
+        body {
+            height: 100%;
+            background-color: #828282;
+        }
+
+        .big {
+            position: fixed;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.9);
+            display: flex;
+            justify-content: center;
+            align-items: start;
+            overflow-y: scroll;
+            display: none;
+        }
+
+        .bigShow {
+            display: flex;
+        }
+
+        .area {
+            width: 90%;
+            min-height: 90%;
+            background-color: #fff;
+            display: flex;
+        }
+
+        .area .img {
+            width: var(--area-img-width);
+        }
+
+        .area .img img {
+            width: 100%;
+        }
+
+        .area .content {
+            width: calc(100% - var(--area-img-width));
+        }
+
+        .attractions {
+            padding: 20px;
+            background-color: #fff;
+        }
+
+        .attractions .attraction {
+            position: relative;
+            background-color: rgb(249, 233, 233);
+            display: flex;
+            padding: 5px;
+            margin-bottom: 5px;
+        }
+
+        .attractions .attraction:hover {
+            background-color: rgb(241, 152, 152);
+        }
+
+        .attractions .Id {
+            width: var(--book-sn-width);
+            text-align: center;
+        }
+
+        .attractions .add {
+            width: calc(100% - var(--book-sn-width) - var(--book-author-width));
+        }
+
+        .attractions .Name {
+            width: var(--book-author-width);
+        }
+    </style>
+</head>
+
+<body>
+    <div class="attractions">
+        <div class="attraction">
+            <div class="sn">${n} </div>
+            <div class="Name">${Name} </div>
+            <div class="add">${add} </div>
+        </div>
+    </div>
+    <div class="big">
+        <div class="area">
+            <div class="img">
+                <img src="" alt="">
+            </div>
+            <div class="content">
+                <h1>景點名稱</h1>
+                <h2>Id</h2>
+                <h3 class="add">Add</h3>
+                <h3 class="date">上傳日期</h3>
+                <div class="descd">Toldescribe</div>
+            </div>
+        </div>
+    </div>
+
+
+
+    <script>
+        //Picture1
+        //Id
+        //Name景點名稱   
+        //Add地址         
+        //Changetime最後上傳日期
+        //Toldescribe描述
+        const start = 4100;
+        const end = 4199;
+        let attractionsData;
+        getData();
+
+
+        function getData() {
+            fetch(`https://sagedaben.com/iSpan/api/spot.php`, { method: "GET" })
+                .then(function (response) {
+                    return response.json();
+                })
+                .then(function (data) {
+                    console.log(data);
+                    attractionsData = data.XML_Head.Infos.Info
+                    setattractions();
+
+                    console.log(attractionsData);
+                })
+                .catch(function (error) {
+                    console.error('Error:', error);
+                });
+        }
+
+        const attractions = document.querySelector(".attractions");
+
+        function setattractions() {
+            let htmlString = "";
+            console.log(attractionsData);
+            for (let i = start; i < end; i++) {
+                console.log(attractionsData[i]);
+                let template = `
+            <div class="attraction" id = ${attractionsData[i].Id}>
+              <div class="sn">${(i)}</div>
+              <div class="Name">${attractionsData[i].Name}</div>
+              <div class="add">${attractionsData[i].Add ?? "暫時無內容提供"}</div>
+            </div>
+                `;
+                htmlString += template;
+            }
+            console.log(htmlString);
+            console.log(attractions);
+            attractions.innerHTML = htmlString;
+            setattractionsClick();
+        }
+
+        const big = document.querySelector(".big");
+        big.addEventListener("click", function (e) {
+            this.classList.remove("bigShow");
+        })
+
+        function setattractionsClick() {
+            const attractionItems = document.querySelectorAll(".attraction");
+
+            attractionItems.forEach(attractionItem => {
+                attractionItem.addEventListener("click", function (e) {
+                    const Id = attractionItem.getAttribute("id");
+                    getbigData(Id);
+                })
+            })
+        }
+
+        const bigImg = document.querySelector(".big img");
+        const bigId = document.querySelector(".big h2");
+        const bigName = document.querySelector(".big h1")
+        const bigAdd = document.querySelector(".big .add");
+        const bigChangeTime = document.querySelector(".big .date");
+        const bigToldescribe = document.querySelector(".big .descd");
+
+        function getbigData(Id) {
+            const attractionData = attractionsData.find(item => item.Id === Id);
+            if (attractionData) {
+                bigImg.setAttribute("src", attractionData.Picture1);
+                bigId.innerHTML = attractionData.Id;
+                bigName.innerHTML = attractionData.Name;
+                bigAdd.textContent = attractionData.Add ?? "暫時無內容提供";
+                bigChangeTime.innerHTML = attractionData.Changetime;
+                bigToldescribe.innerHTML = attractionData.Toldescribe;
+                big.classList.add("bigShow");
+            }
+
+            //沒圖片處理方式
+            if (attractionData.Picture1) {
+                bigImg.setAttribute("src", attractionData.Picture1);
+            } else {
+                bigImg.removeAttribute("src");
+                bigImg.textContent = "暫時無內容提供";
+            }
+        }
+    </script>
+</body>
+
+</html>
